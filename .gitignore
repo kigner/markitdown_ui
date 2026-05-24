@@ -174,3 +174,6 @@ src/.DS_Store
 .remember/
 UI设计.txt
 
+# Bundled portable Python runtime (~1GB) — built locally, distributed as a release zip, not via git
+python312/
+

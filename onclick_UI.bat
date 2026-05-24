@@ -1,27 +1,30 @@
 @echo off
-REM Launch MarkItDown GUI using the project's venv.
-REM Place this file in the repo root.
+REM Launch MarkItDown GUI using the bundled portable Python runtime.
+REM Place this file in the repo root. Extract-and-run — no install needed.
 
 setlocal
 
-set "VENV_PY=%~dp0venv\Scripts\pythonw.exe"
-set "VENV_PY_CONSOLE=%~dp0venv\Scripts\python.exe"
+set "EMBED_PY=%~dp0python312\pythonw.exe"
+set "EMBED_PY_CONSOLE=%~dp0python312\python.exe"
 
-if not exist "%VENV_PY_CONSOLE%" (
-    echo [ERROR] venv not found at %~dp0venv
-    echo Create it first:
-    echo     python -m venv venv
-    echo     venv\Scripts\python -m pip install -e packages\markitdown[all]
-    echo     venv\Scripts\python -m pip install -e packages\markitdown-gui
+if not exist "%EMBED_PY_CONSOLE%" (
+    echo [ERROR] Portable Python runtime not found at %~dp0python312
+    echo This launcher expects the bundled python312\ folder shipped with the integrated package.
+    echo If you cloned from git, you need to download the integrated package release instead,
+    echo or rebuild the runtime by placing a CPython 3.12 embeddable distribution here and running:
+    echo     python312\python.exe get-pip.py
+    echo     python312\python.exe -m pip install --no-build-isolation hatchling
+    echo     python312\python.exe -m pip install --no-build-isolation .\packages\markitdown[all]
+    echo     python312\python.exe -m pip install --no-build-isolation .\packages\markitdown-gui
     pause
     exit /b 1
 )
 
-REM Use pythonw.exe (no console window) when available; fall back to python.exe.
-if exist "%VENV_PY%" (
-    start "" "%VENV_PY%" -m markitdown_gui
+REM pythonw.exe runs without a console window; fall back to python.exe if missing.
+if exist "%EMBED_PY%" (
+    start "" "%EMBED_PY%" -m markitdown_gui
 ) else (
-    "%VENV_PY_CONSOLE%" -m markitdown_gui
+    "%EMBED_PY_CONSOLE%" -m markitdown_gui
 )
 
 endlocal
