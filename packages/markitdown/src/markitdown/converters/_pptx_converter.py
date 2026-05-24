@@ -28,6 +28,60 @@ ACCEPTED_MIME_TYPE_PREFIXES = [
     "application/vnd.openxmlformats-officedocument.presentationml",
 ]
 
+
+def _sniff_content_type(blob: bytes) -> str:
+    """Cheap magic-byte sniffing for image formats PIL won't recognize.
+
+    Returns an image/* mimetype string. python-pptx's `shape.image.content_type`
+    asks PIL to identify the blob, which fails (UnidentifiedImageError) for
+    EMF/WMF and other Windows-only formats. When that happens we fall back
+    here.
+    """
+    if not blob:
+        return "application/octet-stream"
+    if blob.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "image/png"
+    if blob[:3] == b"\xff\xd8\xff":
+        return "image/jpeg"
+    if blob[:6] in (b"GIF87a", b"GIF89a"):
+        return "image/gif"
+    if blob[:2] == b"BM":
+        return "image/bmp"
+    if blob[:4] == b"RIFF" and blob[8:12] == b"WEBP":
+        return "image/webp"
+    if blob[:4] == b"II*\x00" or blob[:4] == b"MM\x00*":
+        return "image/tiff"
+    # EMF: starts with EMR_HEADER record type 0x00000001, identifier 'EMF '
+    # at offset 40.
+    if blob[:4] == b"\x01\x00\x00\x00" and blob[40:44] == b" EMF":
+        return "image/x-emf"
+    # Placeable WMF
+    if blob[:4] == b"\xd7\xcd\xc6\x9a":
+        return "image/x-wmf"
+    # Non-placeable WMF (less reliable: starts with 0x0001 0x0009)
+    if blob[:4] == b"\x01\x00\x09\x00":
+        return "image/x-wmf"
+    return "application/octet-stream"
+
+
+def _safe_image_blob_and_type(shape):
+    """Read a picture shape's blob + content-type, surviving WMF/EMF/etc.
+
+    Returns (blob, content_type) on success, or (None, None) if the image
+    cannot be read at all (e.g. linked external file).
+    """
+    try:
+        blob = shape.image.blob
+    except Exception:
+        return None, None
+    try:
+        content_type = shape.image.content_type or _sniff_content_type(blob)
+    except Exception:
+        # PIL_Image.open() inside python-pptx failed (UnidentifiedImageError
+        # for EMF/WMF) — fall back to magic-byte sniffing.
+        content_type = _sniff_content_type(blob)
+    return blob, content_type
+
 ACCEPTED_FILE_EXTENSIONS = [".pptx"]
 
 
@@ -78,6 +132,19 @@ class PptxConverter(DocumentConverter):
                 _dependency_exc_info[2]
             )
 
+        # Set up image extraction if enabled
+        image_extractor = None
+        if kwargs.get("extract_images", False):
+            images_dir = kwargs.get("images_dir")
+            if images_dir:
+                from ..converter_utils._image_extractor import ImageExtractor
+
+                rel_prefix = os.path.basename(images_dir)
+                name_prefix = kwargs.get("image_name_prefix", "")
+                image_extractor = ImageExtractor(
+                    images_dir, rel_prefix=rel_prefix, name_prefix=name_prefix
+                )
+
         # Perform the conversion
         presentation = pptx.Presentation(file_stream)
         md_content = ""
@@ -95,6 +162,14 @@ class PptxConverter(DocumentConverter):
                 if self._is_picture(shape):
                     # https://github.com/scanny/python-pptx/pull/512#issuecomment-1713100069
 
+                    # Read the image blob and content-type once, surviving
+                    # WMF/EMF/etc. that python-pptx can't classify via PIL.
+                    blob, content_type = _safe_image_blob_and_type(shape)
+                    if blob is None:
+                        # Picture has no readable backing (e.g. linked file
+                        # that's missing). Skip — don't kill the whole deck.
+                        return
+
                     llm_description = ""
                     alt_text = ""
 
@@ -103,17 +178,20 @@ class PptxConverter(DocumentConverter):
                     llm_model = kwargs.get("llm_model")
                     if llm_client is not None and llm_model is not None:
                         # Prepare a file_stream and stream_info for the image data
-                        image_filename = shape.image.filename
+                        try:
+                            image_filename = shape.image.filename
+                        except Exception:
+                            image_filename = None
                         image_extension = None
                         if image_filename:
                             image_extension = os.path.splitext(image_filename)[1]
                         image_stream_info = StreamInfo(
-                            mimetype=shape.image.content_type,
+                            mimetype=content_type,
                             extension=image_extension,
                             filename=image_filename,
                         )
 
-                        image_stream = io.BytesIO(shape.image.blob)
+                        image_stream = io.BytesIO(blob)
 
                         # Caption the image
                         try:
@@ -140,12 +218,18 @@ class PptxConverter(DocumentConverter):
                     alt_text = re.sub(r"[\r\n\[\]]", " ", alt_text)
                     alt_text = re.sub(r"\s+", " ", alt_text).strip()
 
-                    # If keep_data_uris is True, use base64 encoding for images
-                    if kwargs.get("keep_data_uris", False):
-                        blob = shape.image.blob
-                        content_type = shape.image.content_type or "image/png"
+                    # Image handling: extract > data URI > placeholder
+                    if image_extractor is not None:
+                        base_name = re.sub(r"\W", "_", shape.name) if shape.name else None
+                        filename = image_extractor.save_image(
+                            blob,
+                            content_type=content_type or "image/png",
+                            base_name=base_name,
+                        )
+                        md_content += f"\n![{alt_text}]({filename})\n"
+                    elif kwargs.get("keep_data_uris", False):
                         b64_string = base64.b64encode(blob).decode("utf-8")
-                        md_content += f"\n![{alt_text}](data:{content_type};base64,{b64_string})\n"
+                        md_content += f"\n![{alt_text}](data:{content_type or 'image/png'};base64,{b64_string})\n"
                     else:
                         # A placeholder name
                         filename = re.sub(r"\W", "", shape.name) + ".jpg"

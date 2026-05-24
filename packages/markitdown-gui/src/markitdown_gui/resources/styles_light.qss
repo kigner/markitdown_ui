@@ -1,0 +1,90 @@
+/* Light theme */
+
+QWidget {
+    background-color: #f6f8fa;
+    color: #1f2328;
+    font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+    font-size: 14px;
+}
+
+QMainWindow, QDialog {
+    background-color: #f6f8fa;
+}
+
+QPushButton {
+    background-color: #ffffff;
+    color: #1f2328;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    padding: 8px 18px;
+}
+
+QPushButton:hover {
+    border-color: #0969da;
+    color: #0969da;
+}
+
+QPushButton:disabled {
+    color: #8c959f;
+    border-color: #d0d7de;
+}
+
+QLineEdit {
+    background-color: #ffffff;
+    color: #1f2328;
+    border: 1px solid #d0d7de;
+    border-radius: 4px;
+    padding: 6px 10px;
+}
+
+QLineEdit:focus {
+    border-color: #0969da;
+}
+
+QRadioButton, QCheckBox, QLabel {
+    background: transparent;
+    color: #1f2328;
+}
+
+QRadioButton::indicator {
+    width: 14px;
+    height: 14px;
+    border-radius: 7px;
+    border: 1px solid #8c959f;
+    background-color: white;
+}
+
+QRadioButton::indicator:checked {
+    background-color: #0969da;
+    border-color: #0969da;
+}
+
+QCheckBox::indicator {
+    width: 14px;
+    height: 14px;
+    border: 1px solid #8c959f;
+    border-radius: 3px;
+    background-color: white;
+}
+
+QCheckBox::indicator:checked {
+    background-color: #0969da;
+    border-color: #0969da;
+}
+
+QPlainTextEdit, QTextEdit {
+    background-color: #ffffff;
+    color: #1f2328;
+    border: 1px solid #d0d7de;
+    border-radius: 4px;
+    padding: 8px;
+    font-family: "Consolas", "Cascadia Mono", "Menlo", monospace;
+}
+
+QComboBox, QSpinBox {
+    background-color: #ffffff;
+    color: #1f2328;
+    border: 1px solid #d0d7de;
+    border-radius: 4px;
+    padding: 4px 8px;
+}

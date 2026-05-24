@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 import argparse
+import os
 import sys
 import codecs
 from typing import Any, Dict
@@ -132,10 +133,28 @@ def main():
         help="List installed 3rd-party plugins. Plugins are loaded when using the -p or --use-plugin option.",
     )
 
-    parser.add_argument(
+    image_group = parser.add_mutually_exclusive_group()
+    image_group.add_argument(
         "--keep-data-uris",
         action="store_true",
         help="Keep data URIs (like base64-encoded images) in the output. By default, data URIs are truncated.",
+    )
+    image_group.add_argument(
+        "--extract-images",
+        action="store_true",
+        help="Extract images to separate files in a <output>_images/ directory. Mutually exclusive with --keep-data-uris.",
+    )
+
+    parser.add_argument(
+        "--images-dir",
+        type=str,
+        help="Override the directory where extracted images are saved. Only used with --extract-images. If omitted, defaults to <output>_images/.",
+    )
+
+    parser.add_argument(
+        "--image-name-prefix",
+        type=str,
+        help="Prefix prepended to every extracted image filename (e.g. 'doc1' -> 'doc1_chart.png'). Only used with --extract-images.",
     )
 
     parser.add_argument("filename", nargs="?")
@@ -249,10 +268,25 @@ def main():
             sys.stdin.buffer,
             stream_info=stream_info,
             keep_data_uris=args.keep_data_uris,
+            extract_images=args.extract_images,
         )
     else:
+        kwargs: Dict[str, Any] = {}
+        if args.extract_images:
+            if args.images_dir:
+                images_dir = args.images_dir
+            else:
+                output_base = os.path.splitext(args.output if args.output else args.filename)[0]
+                images_dir = f"{output_base}_images"
+            kwargs["extract_images"] = True
+            kwargs["images_dir"] = images_dir
+            if args.image_name_prefix:
+                kwargs["image_name_prefix"] = args.image_name_prefix
         result = markitdown.convert(
-            args.filename, stream_info=stream_info, keep_data_uris=args.keep_data_uris
+            args.filename,
+            stream_info=stream_info,
+            keep_data_uris=args.keep_data_uris,
+            **kwargs,
         )
 
     _handle_output(args, result)

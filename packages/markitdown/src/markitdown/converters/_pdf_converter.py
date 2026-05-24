@@ -539,6 +539,16 @@ class PdfConverter(DocumentConverter):
         # Read file stream into BytesIO for compatibility with pdfplumber
         pdf_bytes = io.BytesIO(file_stream.read())
 
+        extract_images = kwargs.get("extract_images", False)
+        images_dir = kwargs.get("images_dir")
+
+        if extract_images and images_dir:
+            return self._convert_with_images(
+                pdf_bytes,
+                images_dir,
+                name_prefix=kwargs.get("image_name_prefix", ""),
+            )
+
         try:
             # Single pass: check every page for form-style content.
             # Pages with tables/forms get rich extraction; plain-text
@@ -586,4 +596,164 @@ class PdfConverter(DocumentConverter):
         # Post-process to merge MasterFormat-style partial numbering with following text
         markdown = _merge_partial_numbering_lines(markdown)
 
+        return DocumentConverterResult(markdown=markdown)
+
+    def _convert_with_images(
+        self, pdf_bytes: io.BytesIO, images_dir: str, name_prefix: str = ""
+    ) -> DocumentConverterResult:
+        """Convert PDF to markdown, extracting images to the specified directory.
+
+        PDFs exported from PowerPoint or scanned documents often embed
+        thousands of tiny / malformed image streams (1-bit character masks,
+        tile patterns, unusual color spaces) that pdfminer's ImageWriter
+        writes as invalid BMP files. We validate each export with PIL and
+        drop anything that won't open or is implausibly small. We also
+        deduplicate identical text blocks within a page, since PPT export
+        commonly overlays the same text in multiple text boxes.
+        """
+        import os as _os
+        import re as _re
+
+        from pdfminer.high_level import extract_pages
+        from pdfminer.image import ImageWriter
+        from pdfminer.layout import LTImage, LTTextBox, LTTextLine, LTFigure, LTAnno
+
+        try:
+            from PIL import Image as _PILImage
+            _have_pil = True
+        except ImportError:
+            _have_pil = False
+
+        image_writer = ImageWriter(images_dir)
+        rel_prefix = _os.path.basename(images_dir)
+        sanitized_prefix = (
+            _re.sub(r"[^\w\-_. ]", "_", name_prefix).strip() if name_prefix else ""
+        )
+        markdown_chunks: list[str] = []
+
+        # Skip files smaller than this — almost certainly broken pdfminer BMP
+        # headers or 1-pixel masks. The smallest "real" PNG is ~70 bytes for
+        # a 1x1; PowerPoint decorative icons start ~500 bytes.
+        _MIN_IMAGE_BYTES = 400
+
+        def _validate_and_keep(path: str) -> bool:
+            try:
+                size = _os.path.getsize(path)
+            except OSError:
+                return False
+            if size < _MIN_IMAGE_BYTES:
+                return False
+            if not _have_pil:
+                return True
+            try:
+                with _PILImage.open(path) as im:
+                    im.verify()
+                with _PILImage.open(path) as im:
+                    im.load()
+                    w, h = im.size
+                # Drop near-zero "images" (1xN masks, single-pixel tiles).
+                if w * h < 64:
+                    return False
+                return True
+            except Exception:
+                return False
+
+        def collect_text_and_images(
+            element, page_text: list[str], page_images: list[str]
+        ):
+            if isinstance(element, LTImage):
+                try:
+                    image_filename = image_writer.export_image(element)
+                    full_path = _os.path.join(images_dir, image_filename)
+                    if not _validate_and_keep(full_path):
+                        try:
+                            _os.unlink(full_path)
+                        except OSError:
+                            pass
+                        return
+                    if sanitized_prefix:
+                        new_name = f"{sanitized_prefix}_{image_filename}"
+                        try:
+                            _os.replace(
+                                full_path,
+                                _os.path.join(images_dir, new_name),
+                            )
+                            image_filename = new_name
+                        except OSError:
+                            pass
+                    page_images.append(
+                        f"![Image]({rel_prefix}/{image_filename})"
+                    )
+                except Exception:
+                    pass
+            elif isinstance(element, (LTTextBox, LTTextLine)):
+                text = element.get_text().strip()
+                if text:
+                    page_text.append(text)
+            elif isinstance(element, LTFigure):
+                for child in element:
+                    collect_text_and_images(child, page_text, page_images)
+            elif hasattr(element, "__iter__"):
+                for child in element:
+                    collect_text_and_images(child, page_text, page_images)
+
+        pdf_bytes.seek(0)
+        for page_layout in extract_pages(pdf_bytes):
+            page_text: list[str] = []
+            page_images: list[str] = []
+
+            for element in page_layout:
+                collect_text_and_images(element, page_text, page_images)
+
+            # PPT-exported PDFs frequently put the same text in multiple
+            # overlapping boxes (master + content + decorative), and even
+            # within a single LTTextBox each line may repeat 5-10 times
+            # because PPT placed the run at multiple positions. Dedup at
+            # the line level within a page (cross-page dedup would drop
+            # legitimate per-slide titles).
+            seen_lines: set[str] = set()
+            deduped_blocks: list[str] = []
+            for block in page_text:
+                kept_lines = []
+                for line in block.split("\n"):
+                    line = line.strip()
+                    if not line:
+                        continue
+                    if line in seen_lines:
+                        continue
+                    seen_lines.add(line)
+                    kept_lines.append(line)
+                if kept_lines:
+                    deduped_blocks.append("\n".join(kept_lines))
+
+            parts = deduped_blocks + page_images
+            if parts:
+                markdown_chunks.append("\n\n".join(parts))
+
+        # pdfminer's ImageWriter can leave behind 0-byte files when
+        # export_image() raises after the file handle was already opened.
+        # These never make it into page_images. Sweep any 0-byte file
+        # that doesn't carry the current job's prefix (so we never touch
+        # files belonging to a parallel job pointing at the same dir).
+        try:
+            prefix_token = (sanitized_prefix + "_") if sanitized_prefix else None
+            for f in _os.listdir(images_dir):
+                full = _os.path.join(images_dir, f)
+                if not _os.path.isfile(full):
+                    continue
+                if _os.path.getsize(full) > 0:
+                    continue
+                if prefix_token and f.startswith(prefix_token):
+                    # Belongs to this job but somehow ended up empty —
+                    # still safe to drop because it's not in page_images.
+                    pass
+                try:
+                    _os.unlink(full)
+                except OSError:
+                    pass
+        except OSError:
+            pass
+
+        markdown = "\n\n---\n\n".join(markdown_chunks).strip()
+        markdown = _merge_partial_numbering_lines(markdown)
         return DocumentConverterResult(markdown=markdown)

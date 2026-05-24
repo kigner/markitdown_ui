@@ -1,0 +1,46 @@
+{
+  "app.title": "MarkItDown",
+  "btn.select_input": "Select Input",
+  "btn.select_output": "Select Output",
+  "btn.start": "Start Processing",
+  "btn.settings": "Settings",
+  "btn.cancel": "Cancel",
+  "btn.ok": "OK",
+  "btn.browse": "Browse...",
+
+  "placeholder.input": "Folder or files...",
+  "placeholder.output": "Output folder...",
+
+  "label.image_handling": "Image Handling",
+  "opt.extract": "Extract Images",
+  "opt.embed": "Embed in Markdown",
+  "opt.ignore": "Ignore Images",
+
+  "dialog.settings.title": "Settings",
+  "dialog.settings.language": "Language",
+  "dialog.settings.threads": "Concurrent Threads",
+  "dialog.settings.theme": "Theme",
+  "theme.dark": "Dark Neon",
+  "theme.light": "Light",
+
+  "dialog.input.title": "Select Input",
+  "dialog.input.folder": "Pick a folder (batch mode)",
+  "dialog.input.files": "Pick file(s)",
+  "dialog.choose_folder": "Choose folder",
+  "dialog.choose_files": "Choose files",
+
+  "log.scanned": "Found {n} file(s) to process.",
+  "log.skipped_unsupported": "Skipping unsupported file: {path}",
+  "log.no_word_installed": "Microsoft Word not detected. Skipping {n} legacy .doc file(s). Install Microsoft Office to enable .doc support.",
+  "log.no_powerpoint_installed": "Microsoft PowerPoint not detected. Skipping {n} legacy .ppt file(s). Install Microsoft Office to enable .ppt support.",
+  "log.doc_converting": "Converting legacy .doc via Word: {name}",
+  "log.ppt_converting": "Converting legacy .ppt via PowerPoint: {name}",
+  "log.start_file": "[{i}/{n}] Converting: {name}",
+  "log.done_file": "[{i}/{n}] Done: {name}",
+  "log.error_file": "[{i}/{n}] Error: {name} -- {err}",
+  "log.all_done": "All done. {ok} succeeded, {failed} failed.",
+  "log.no_input": "Please select an input folder or file(s).",
+  "log.no_output": "Please select an output folder.",
+  "log.start": "Starting batch conversion. Threads={threads}.",
+  "log.output_dir": "Output directory: {path}"
+}

@@ -166,3 +166,10 @@ cython_debug/
 src/.DS_Store
 .DS_Store
 .cursorrules
+
+# Local tooling / IDE caches — not part of the project
+.codegraph/
+.cursor/
+.claude/
+.remember/
+

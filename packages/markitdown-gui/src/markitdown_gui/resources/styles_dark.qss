@@ -1,0 +1,199 @@
+/* Dark Neon theme — matches UI-DEMO.png */
+
+QWidget {
+    background-color: #0d1117;
+    color: #e6edf3;
+    font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+    font-size: 14px;
+}
+
+QMainWindow, QDialog {
+    background-color: #0d1117;
+}
+
+/* Buttons */
+
+QPushButton {
+    background-color: transparent;
+    color: #e6edf3;
+    border: 1.5px solid #1f6f6b;
+    border-radius: 6px;
+    padding: 8px 18px;
+    font-weight: 500;
+}
+
+QPushButton:hover {
+    border-color: #2bd4cb;
+    color: #2bd4cb;
+}
+
+QPushButton:pressed {
+    background-color: #112b2a;
+}
+
+QPushButton:disabled {
+    color: #4a5868;
+    border-color: #2a3340;
+}
+
+QPushButton#startButton {
+    border: 1.5px solid #1f6f6b;
+    padding: 10px 20px;
+    font-weight: 600;
+}
+
+QPushButton#startButton:hover {
+    border-color: #2bd4cb;
+    color: #2bd4cb;
+}
+
+QPushButton#settingsButton {
+    padding: 6px 10px;
+    border-color: #1f6f6b;
+}
+
+/* Path display line edits (read-only on the right of input/output buttons) */
+
+QLineEdit {
+    background-color: #0a1117;
+    color: #e6edf3;
+    border: 1px solid #1f6f6b;
+    border-radius: 4px;
+    padding: 6px 10px;
+    selection-background-color: #2bd4cb;
+    selection-color: #0d1117;
+}
+
+QLineEdit:focus {
+    border-color: #2bd4cb;
+}
+
+QLineEdit[readOnly="true"] {
+    background-color: #0a1117;
+    color: #b1bac4;
+}
+
+/* Radio buttons (image-handling options) */
+
+QRadioButton {
+    color: #e6edf3;
+    spacing: 6px;
+    padding: 4px 8px;
+}
+
+QRadioButton::indicator {
+    width: 14px;
+    height: 14px;
+    border-radius: 7px;
+    border: 1.5px solid #1f6f6b;
+    background-color: transparent;
+}
+
+QRadioButton::indicator:hover {
+    border-color: #2bd4cb;
+}
+
+QRadioButton::indicator:checked {
+    background-color: #2bd4cb;
+    border-color: #2bd4cb;
+}
+
+/* Labels */
+
+QLabel {
+    background: transparent;
+    color: #e6edf3;
+}
+
+QLabel#sectionLabel {
+    color: #b1bac4;
+    font-size: 13px;
+}
+
+/* Log panel */
+
+QPlainTextEdit, QTextEdit {
+    background-color: #0a1117;
+    color: #e6edf3;
+    border: 1.5px solid #e6edf3;
+    border-radius: 4px;
+    padding: 8px;
+    font-family: "Consolas", "Cascadia Mono", "Menlo", monospace;
+    font-size: 13px;
+    selection-background-color: #2bd4cb;
+    selection-color: #0d1117;
+}
+
+/* ComboBox & SpinBox in settings dialog */
+
+QComboBox, QSpinBox {
+    background-color: #0a1117;
+    color: #e6edf3;
+    border: 1px solid #1f6f6b;
+    border-radius: 4px;
+    padding: 4px 8px;
+    min-width: 100px;
+}
+
+QComboBox:hover, QSpinBox:hover {
+    border-color: #2bd4cb;
+}
+
+QComboBox::drop-down {
+    border: none;
+    width: 18px;
+}
+
+QComboBox QAbstractItemView {
+    background-color: #0a1117;
+    color: #e6edf3;
+    selection-background-color: #1f6f6b;
+    selection-color: #e6edf3;
+    border: 1px solid #1f6f6b;
+}
+
+/* CheckBox */
+
+QCheckBox {
+    color: #e6edf3;
+    spacing: 6px;
+}
+
+QCheckBox::indicator {
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid #1f6f6b;
+    border-radius: 3px;
+    background-color: transparent;
+}
+
+QCheckBox::indicator:checked {
+    background-color: #2bd4cb;
+    border-color: #2bd4cb;
+}
+
+QCheckBox::indicator:hover {
+    border-color: #2bd4cb;
+}
+
+/* Scrollbar */
+
+QScrollBar:vertical {
+    background: #0a1117;
+    width: 10px;
+    margin: 0;
+}
+
+QScrollBar::handle:vertical {
+    background: #1f6f6b;
+    min-height: 24px;
+    border-radius: 5px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: #2bd4cb;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0;
+}

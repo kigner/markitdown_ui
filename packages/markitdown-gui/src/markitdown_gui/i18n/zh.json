@@ -1,0 +1,46 @@
+{
+  "app.title": "MarkItDown",
+  "btn.select_input": "选择输入",
+  "btn.select_output": "选择输出",
+  "btn.start": "开始处理",
+  "btn.settings": "设置",
+  "btn.cancel": "取消",
+  "btn.ok": "确定",
+  "btn.browse": "浏览...",
+
+  "placeholder.input": "目录或文件...",
+  "placeholder.output": "输出目录...",
+
+  "label.image_handling": "图片处理",
+  "opt.extract": "提取图片",
+  "opt.embed": "嵌入 Markdown",
+  "opt.ignore": "忽略图片",
+
+  "dialog.settings.title": "设置",
+  "dialog.settings.language": "界面语言",
+  "dialog.settings.threads": "并发线程数",
+  "dialog.settings.theme": "主题",
+  "theme.dark": "暗色霓虹",
+  "theme.light": "明亮",
+
+  "dialog.input.title": "选择输入",
+  "dialog.input.folder": "选择目录（批处理）",
+  "dialog.input.files": "选择文件",
+  "dialog.choose_folder": "选择目录",
+  "dialog.choose_files": "选择文件",
+
+  "log.scanned": "发现 {n} 个待处理文件。",
+  "log.skipped_unsupported": "跳过不支持的文件：{path}",
+  "log.no_word_installed": "未检测到 Microsoft Word，跳过 {n} 个 .doc 文件。请安装 Office 以启用 .doc 支持。",
+  "log.no_powerpoint_installed": "未检测到 Microsoft PowerPoint，跳过 {n} 个 .ppt 文件。请安装 Office 以启用 .ppt 支持。",
+  "log.doc_converting": "通过 Word 转换旧版 .doc：{name}",
+  "log.ppt_converting": "通过 PowerPoint 转换旧版 .ppt：{name}",
+  "log.start_file": "[{i}/{n}] 正在转换：{name}",
+  "log.done_file": "[{i}/{n}] 完成：{name}",
+  "log.error_file": "[{i}/{n}] 出错：{name} -- {err}",
+  "log.all_done": "全部完成。成功 {ok} 个，失败 {failed} 个。",
+  "log.no_input": "请选择输入目录或文件。",
+  "log.no_output": "请选择输出目录。",
+  "log.start": "开始批量转换。线程数={threads}。",
+  "log.output_dir": "输出目录：{path}"
+}
