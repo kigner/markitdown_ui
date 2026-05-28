@@ -15,7 +15,7 @@ legacy `.doc` files can be auto-converted via Microsoft Word.)
 ## Portable package (Windows, no install required)
 
 Pre-built integrated package: bundled Python 3.12 runtime with all dependencies. Extract
-and double-click `onclick_UI.vbs` — no Python install, no virtual environment, no
+and double-click `onclick_UI.exe` — no Python install, no virtual environment, no
 `pip install` step needed.
 
 If the GUI fails to open, double-click `onclick_UI_debug.bat` to run the same launch in
