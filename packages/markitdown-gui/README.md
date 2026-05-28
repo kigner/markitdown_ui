@@ -15,8 +15,11 @@ legacy `.doc` files can be auto-converted via Microsoft Word.)
 ## Portable package (Windows, no install required)
 
 Pre-built integrated package: bundled Python 3.12 runtime with all dependencies. Extract
-and double-click `onclick_UI.bat` — no Python install, no virtual environment, no
+and double-click `onclick_UI.vbs` — no Python install, no virtual environment, no
 `pip install` step needed.
+
+If the GUI fails to open, double-click `onclick_UI_debug.bat` to run the same launch in
+a visible console so the traceback can be read.
 
 - Google Drive: <https://drive.google.com/drive/folders/1qEXSxqU44FhShZ2FeorBypxsO9-DUIEg>
 - Baidu Drive: <https://pan.baidu.com/s/1RHSeEBj2KDscC_XYCU9auA?pwd=gacr> (code: `gacr`)
